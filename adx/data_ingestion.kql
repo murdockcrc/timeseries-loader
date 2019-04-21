@@ -1,0 +1,8 @@
+// Ingest blob data into Kusto
+// Warning: if the total time for ingestion exceeds 1 hour, the job will fail
+// In that case, split the dataset into smaller files and retry
+.ingest async into table Trucks (
+    h'https://luisdeltrucks.blob.core.windows.net/trucks/0_742175f33d85471281626b9816bd6f64_1.json',
+    h'https://luisdeltrucks.blob.core.windows.net/trucks/0_b32e2f3120d84ecf926539c9054da9bd_1.json')
+    with (jsonMappingReference = "TrucksMapping")
+    with (format = "json")

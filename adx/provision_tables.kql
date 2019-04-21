@@ -1,0 +1,6 @@
+// Create the table for Trucks data
+.create tables Trucks (deviceId:string, timestamp:datetime, latitude:float, longitude:float, speed:float, speed_unit:string, temperature:float, temperature_unit:string)
+
+// Create the JSON mapping that will map JSON objects to the Trucks table schema
+.create table Trucks ingestion json mapping 'TrucksMapping' '[{"column":"deviceId","path":"$.IoTHub.ConnectionDeviceId"}, {"column":"timestamp","path":"$.IoTHub.EnqueuedTime"}, {"column":"latitude","path":"$.latitude"}, {"column":"longitude","path":"$.longitude"}, {"column":"speed","path":"$.speed"}, {"column":"speed_unit","path":"$.speed_unit"}, {"column":"temperature","path":"$.temperature"}, {"column":"temperature_unit","path":"$.temperature_unit"}]'
+ 
