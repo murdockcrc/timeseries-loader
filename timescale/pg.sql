@@ -10,4 +10,4 @@ CREATE TABLE Trucks
     ConnectionDeviceId varchar(200) NOT NULL
 );
 
-SELECT create_hypertable('trucks', 'eventprocessedutctime');
+SELECT create_hypertable('trucks', 'eventprocessedutctime', chunk_time_interval => interval '1 hour');

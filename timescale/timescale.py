@@ -58,15 +58,14 @@ def pg_load(connection_string, table_name, file_path):
 
         f = open(file_path, "r")
         for x in f:            
-            observations.append(TruckObservation(x))
-            i += 1
+            observations.append(TruckObservation(x))            
             if i > 1000000:
                 print("Execute_values")
                 extras.execute_values(cur, sql, observations, template=None, page_size=100000)
+                cur.execute("commit;")
                 observations = []
                 i = 0
-                    
-        cur.execute("commit;")
+            i += 1                        
 
         end = time.time()
         print("Loaded data into {}".format(table_name))
