@@ -5,6 +5,9 @@ import psycopg2
 from psycopg2 import extras
 import json
 import time
+import os
+from multiprocessing import Pool
+from functools import partial
 
 class TruckObservation(object):
     def __init__(self, j):
@@ -43,39 +46,48 @@ class TruckObservation(object):
     def __len__(self):
         return 8
 
+def files_loader(connection_string, table_name, files):
+    pool = Pool(processes=5)
+    func = partial(pg_load, connection_string, table_name)
+
+    while len(files) > 0:
+        print(len(files))
+        files_to_load = files[0:5]
+        files = files[5::]
+        pool.map(func, files_to_load)
+
 def pg_load(connection_string, table_name, file_path):    
-    try:
-        sql = """INSERT INTO trucks(latitude, longitude, speed, speed_unit, temperature, temperature_unit, eventprocessedutctime, connectiondeviceid) 
-                VALUES %s"""
-        observations = []                
-        i = 0
+    sql = """INSERT INTO trucks(latitude, longitude, speed, speed_unit, temperature, temperature_unit, eventprocessedutctime, connectiondeviceid) 
+            VALUES %s"""
+    observations = []                        
 
-        start = time.time()
+    conn = psycopg2.connect(connection_string)
+    print("Connecting to Database")
+    cur = conn.cursor()                
+    
+    f = open(file_path, "r")
+    for x in f:                        
+        observations.append(TruckObservation(x))            
+        
+    print("Execute_values")
+    extras.execute_values(cur, sql, observations)
+    cur.execute("commit;")
 
-        conn = psycopg2.connect(connection_string)
-        print("Connecting to Database")
-        cur = conn.cursor()                
+    conn.close()
+    print("DB connection closed.")
 
-        f = open(file_path, "r")
-        for x in f:            
-            observations.append(TruckObservation(x))            
-            if i > 1000000:
-                print("Execute_values")
-                extras.execute_values(cur, sql, observations, template=None, page_size=100000)
-                cur.execute("commit;")
-                observations = []
-                i = 0
-            i += 1                        
+    del observations[:]
 
-        end = time.time()
-        print("Loaded data into {}".format(table_name))
-        print("Execution time: {}".format(end - start))
-
-        conn.close()
-        print("DB connection closed.")
-    except Exception as e:
-        print('Error {}'.format(str(e)))
-
-file_path = sys.argv[1]
+directory_path = sys.argv[1]
 connection_string = sys.argv[2]
-pg_load(connection_string, table_name, file_path)
+
+files = []
+for r, d, f in os.walk(directory_path):
+    for file in f:
+        files.append(os.path.join(r, file))
+        
+start = time.time()
+files_loader(connection_string, table_name, files)
+end = time.time()
+print("Loaded data into {}".format(table_name))
+print("Execution time: {}".format(end - start))

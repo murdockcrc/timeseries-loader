@@ -30,7 +30,8 @@ Execution time: 1min 30secs
 
 ## Count all messages for one deviceId
 ```
-select count(*) from trucks                                                                                  where connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578';
+SELECT COUNT(*) FROM trucks
+WHERE connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578';
 ```
 
 ```
@@ -40,7 +41,9 @@ Execution time: 1min 12secs
 
 ## For a specific deviceId, return the first and last values in the db
 ```
-select eventprocessedutctime                                                                  from trucks                                                                                   where connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'              order by eventprocessedutctime desc limit 1;
+SELECT eventprocessedutctime FROM trucks 
+WHERE connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'
+ORDER BY eventprocessedutctime DESC LIMIT 1;
 ```
 
 Result (111.275ms):
@@ -55,10 +58,11 @@ Result (175.378ms)
 
 ## For a specific deviceId, return all observations for a 4-hour period
 ```
-select *
-from trucks                                                                                   where connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'              
-    and eventprocessedutctime <= TIMESTAMPTZ '2019-04-15 06:46:24.551888+00'
-    and eventprocessedutctime > TIMESTAMPTZ '2019-04-15 06:46:24.551888+00' - interval '4 hours';
+SELECT *
+FROM trucks
+WHERE connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'              
+AND eventprocessedutctime <= TIMESTAMPTZ '2019-04-15 06:46:24.551888+00'
+AND eventprocessedutctime > TIMESTAMPTZ '2019-04-15 06:46:24.551888+00' - interval '4 hours';
 ```
 
 Result (2.295secs)
@@ -68,12 +72,21 @@ Result (2.295secs)
 ## bin the data by avg value, min and max
 
 ```
+SELECT count(*)
+FROM trucks
+where connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'              
+    and eventprocessedutctime <= TIMESTAMPTZ '2019-04-15 06:46:24.551888+00'
+    and eventprocessedutctime > TIMESTAMPTZ '2019-04-15 06:46:24.551888+00' - interval '4 hours'
+```
+
+```
 SELECT time_bucket('30 minutes', eventprocessedutctime) AS thirty_min, avg(temperature), min(temperature), max(temperature)
 FROM trucks
 where connectiondeviceid = 'd1626544-acfc-44fd-978a-6879f345a0da.truck-01.11578'              
     and eventprocessedutctime <= TIMESTAMPTZ '2019-04-15 06:46:24.551888+00'
     and eventprocessedutctime > TIMESTAMPTZ '2019-04-15 06:46:24.551888+00' - interval '4 hours'
 GROUP BY thirty_min
+ORDER BY thirty_min DESC
 ```
 
 Result(2.419secs)
